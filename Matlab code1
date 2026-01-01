@@ -1,0 +1,99 @@
+%% rocket_earth_moon.m
+% Straight-line Earth to Moon rocket motion (1D)
+
+clc; clear;
+
+%% 1. CONSTANTS (USER CAN MODIFY)
+G  = 6.67430e-11;        % gravitational constant (m^3/kg/s^2)
+
+Me = 5.972e24;          % mass of Earth (kg)
+Mm = 7.347e22;          % mass of Moon (kg)
+
+Re = 6.371e6;           % Earth radius (m)
+Rm = 1.737e6;           % Moon radius (m)
+
+D  = 3.84e8;            % Earth-Moon distance (m)
+
+%% 2. ROCKET PARAMETERS (USER DEFINED)
+m0     = 2.5e5;         % initial mass (kg)
+mdot   = 150;           % fuel burn rate (kg/s)
+Tthrust = 4e6;          % thrust force (N)
+burn_time = 600;        % thrust duration (s)
+
+%% 3. TIME SETUP
+dt = 1;                 % time step (s)
+T  = 3*24*3600;         % simulate 3 days
+t  = 0:dt:T;
+N  = length(t);
+
+%% 4. INITIAL CONDITIONS
+x = zeros(1,N);         % position (m)
+v = zeros(1,N);         % velocity (m/s)
+a = zeros(1,N);         % acceleration (m/s^2)
+m = zeros(1,N);         % mass (kg)
+
+x(1) = Re;              % start from Earth's surface
+v(1) = 0;
+m(1) = m0;
+
+%% 5. MAIN SIMULATION LOOP
+for i = 1:N-1
+    
+    % Mass variation
+    if t(i) <= burn_time && m(i) > (m0 - mdot*burn_time)
+        m(i+1) = m(i) - mdot*dt;
+        F_thrust = Tthrust;
+    else
+        m(i+1) = m(i);
+        F_thrust = 0;
+    end
+    
+    % Distances from Earth & Moon
+    rE = x(i);          
+    rM = D - x(i);
+    
+    % Gravitational forces
+    Fg_E = G * Me * m(i) / rE^2;   % Earth gravity
+    Fg_M = G * Mm * m(i) / rM^2;   % Moon gravity
+    
+    % Net force (towards Moon is positive)
+    Fnet = F_thrust - Fg_E + Fg_M;
+    
+    % Acceleration
+    a(i) = Fnet / m(i);
+    
+    % Velocity & Position update (Euler method)
+    v(i+1) = v(i) + a(i)*dt;
+    x(i+1) = x(i) + v(i)*dt;
+    
+    % Stop if Moon reached
+    if x(i+1) >= (D - Rm)
+        fprintf('Moon reached at t = %.2f hours\n', t(i)/3600);
+        break;
+    end
+end
+
+%% 6. PLOTS
+figure;
+subplot(3,1,1)
+plot(t/3600, x/1e6)
+xlabel('Time (hours)')
+ylabel('Position (10^6 m)')
+title('Rocket Position')
+
+subplot(3,1,2)
+plot(t/3600, v)
+xlabel('Time (hours)')
+ylabel('Velocity (m/s)')
+title('Rocket Velocity')
+
+subplot(3,1,3)
+plot(t/3600, a)
+xlabel('Time (hours)')
+ylabel('Acceleration (m/s^2)')
+title('Rocket Acceleration')
+
+%% 7. SAVE DATA
+save('rocket_earth_moon.mat','t','x','v','a','m')
+disp('Simulation data saved')
+
