@@ -1,0 +1,132 @@
+%% MASTER_ROCKET_PROJECT.m
+% Linear Algebra + Physics based Rocket Trajectory Simulation
+
+clc; clear;
+
+fprintf('🚀 ROCKET TRAJECTORY SIMULATION USING LINEAR ALGEBRA & PHYSICS\n\n');
+
+%% =========================
+%% 1️⃣ USER INPUT (MATHS)
+%% =========================
+A = input('Enter coefficient matrix A (3x3): ');
+B = input('Enter force vector B (3x1): ');
+
+[m,n] = size(A);
+
+%% =========================
+%% 2️⃣ LINEAR ALGEBRA ANALYSIS
+%% =========================
+rA = rank(A);
+detA = det(A);
+eigA = eig(A);
+
+fprintf('\n--- LINEAR ALGEBRA RESULTS ---\n');
+fprintf('Rank(A) = %d\n', rA);
+fprintf('Determinant(A) = %.4f\n', detA);
+disp('Eigenvalues:'); disp(eigA);
+
+if rA == n
+    disp('✔ Equations are LINEARLY INDEPENDENT');
+else
+    disp('✘ Equations are LINEARLY DEPENDENT');
+end
+
+if abs(detA) > 1e-6
+    disp('✔ System is STABLE (Unique solution exists)');
+    X = A \ B;
+else
+    disp('✘ System is UNSTABLE (No unique solution)');
+    X = [1;1;1];   % fallback motion parameters
+end
+
+disp('Motion parameters X ='); disp(X);
+
+%% =========================
+%% 3️⃣ PHYSICS CONSTANTS
+%% =========================
+G  = 6.674e-11;
+Me = 5.972e24;         % Earth mass (kg)
+Re = 6.371e6;          % Earth radius (m)
+
+%% =========================
+%% 4️⃣ ROCKET PARAMETERS (USER)
+%% =========================
+m0    = input('Enter initial rocket mass (kg): ');
+Th    = input('Enter thrust force (N): ');
+mdot  = input('Enter fuel burn rate (kg/s): ');
+tburn = input('Enter burn time (s): ');
+
+%% =========================
+%% 5️⃣ TIME SETUP
+%% =========================
+dt = 1;
+T  = 500;
+t  = 0:dt:T;
+N  = length(t);
+
+x = zeros(1,N);
+v = zeros(1,N);
+a = zeros(1,N);
+m = zeros(1,N);
+
+x(1) = Re;
+v(1) = 0;
+m(1) = m0;
+
+%% =========================
+%% 6️⃣ PHYSICS + MOTION EQUATIONS
+%% =========================
+for i = 1:N-1
+
+    % Mass variation
+    if t(i) <= tburn
+        m(i+1) = m(i) - mdot*dt;
+        F_thrust = Th;
+    else
+        m(i+1) = m(i);
+        F_thrust = 0;
+    end
+
+    % Gravity force
+    Fg = G * Me * m(i) / x(i)^2;
+
+    % Net force (Linear Algebra Scaling)
+    Fnet = X(1)*F_thrust - X(2)*Fg;
+
+    % Acceleration
+    a(i) = Fnet / m(i);
+
+    % Velocity and Position
+    v(i+1) = v(i) + a(i)*dt;
+    x(i+1) = x(i) + v(i)*dt;
+
+end
+
+%% =========================
+%% 7️⃣ RESULTS & PLOTS
+%% =========================
+figure;
+
+subplot(3,1,1)
+plot(t, x/1e3)
+xlabel('Time (s)')
+ylabel('Position (km)')
+title('Rocket Position')
+
+subplot(3,1,2)
+plot(t, v)
+xlabel('Time (s)')
+ylabel('Velocity (m/s)')
+title('Rocket Velocity')
+
+subplot(3,1,3)
+plot(t, a)
+xlabel('Time (s)')
+ylabel('Acceleration (m/s^2)')
+title('Rocket Acceleration')
+
+%% =========================
+%% 8️⃣ SAVE DATA FOR PYTHON
+%% =========================
+save('rocket_project_data.mat','A','B','X','rA','detA','eigA','t','x','v','a');
+disp('✔ Data saved for Python visualization');
