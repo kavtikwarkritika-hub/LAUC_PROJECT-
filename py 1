@@ -1,0 +1,44 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Load CSV data
+data = np.loadtxt('rocket_data_A1.csv', delimiter=',', skiprows=1)
+# Columns
+time = data[:, 0]
+position = data[:, 1]
+velocity = data[:, 2]
+acceleration = data[:, 3]
+
+# Create a 3D figure with 3 subplots
+fig = plt.figure(figsize=(18,6))
+
+# --------- Position-Time 3D ---------
+ax1 = fig.add_subplot(131, projection='3d')
+ax1.plot(time, position, zs=0, zdir='y', label='Position', color='blue', marker='o')
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Dummy Y')  # Not used
+ax1.set_zlabel('Position (m)')
+ax1.set_title('Position vs Time')
+ax1.view_init(elev=20, azim=-60)  # Angle for better view
+
+# --------- Velocity-Time 3D ---------
+ax2 = fig.add_subplot(132, projection='3d')
+ax2.plot(time, velocity, zs=0, zdir='y', label='Velocity', color='orange', marker='o')
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Dummy Y')
+ax2.set_zlabel('Velocity (m/s)')
+ax2.set_title('Velocity vs Time')
+ax2.view_init(elev=20, azim=-60)
+
+# --------- Acceleration-Time 3D ---------
+ax3 = fig.add_subplot(133, projection='3d')
+ax3.plot(time, acceleration, zs=0, zdir='y', label='Acceleration', color='green', marker='o')
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Dummy Y')
+ax3.set_zlabel('Acceleration (m/s²)')
+ax3.set_title('Acceleration vs Time')
+ax3.view_init(elev=20, azim=-60)
+
+plt.tight_layout()
+plt.show()
